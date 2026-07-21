@@ -1,3 +1,4 @@
+require('dotenv').config({ path: '../.env' });
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient()
 const util = require('util');
@@ -11,18 +12,25 @@ function getAllStaff() {
 
 
 function getHodInfo() {
-	return prisma.department.findMany({
-		//TODO: Implement the query
-
-	});
+    return prisma.department.findMany({
+        select: {
+            deptName: true,
+            hodApptDate: true
+        }
+    });
 }
 
 
 function getDeptStaffingInfo() {
-	return prisma.department.findMany({
-		//TODO: Implement the query
-
-	});
+    return prisma.department.findMany({
+        select: {
+            deptCode: true,
+            noOfStaff: true
+        },
+        orderBy: {
+            noOfStaff: 'desc'
+        }
+    });
 }
 
 
@@ -30,18 +38,64 @@ function getDeptStaffingInfo() {
 
 
 function getStaffofSpecificCitizenships() {
-	return prisma.staff.findMany({
-		//TODO: Implement the query
-
-	});
+    return prisma.staff.findMany({
+        where: {
+            citizenship: {
+                in: ['Hong Kong', 'Korea', 'Malaysia', 'Thailand']
+            }
+        },
+        select: {
+            citizenship: true,
+            staffName: true
+        },
+        orderBy: [
+            {
+                citizenship: 'asc'
+            },
+            {
+                staffName: 'asc'
+            }
+        ]
+    });
 }
 
 
 function getStaffByCriteria1() {
-	return prisma.staff.findMany({
-		//TODO: Implement the query
-
-	});
+    return prisma.staff.findMany({
+        where: {
+            maritalStatus: 'M',
+            OR: [
+                {
+                    gender: 'M',
+                    pay: {
+                        gte: 4000,
+                        lte: 7000
+                    }
+                },
+                {
+                    gender: 'M',
+                    pay: {
+                        gte: 2000,
+                        lte: 6000
+                    }
+                }
+            ]
+        },
+        select: {
+            gender: true,
+            pay: true,
+            maritalStatus: true,
+            staffName: true
+        },
+        orderBy: [
+            {
+                gender: 'asc'
+            },
+            {
+                pay: 'asc'
+            }
+        ]
+    });
 }
 
 
@@ -49,23 +103,84 @@ function getStaffByCriteria1() {
 
 async function getDepartmentCourses() {
     return prisma.department.findMany({
-		//TODO: Implement the query
-		
-    })
+        select: {
+            deptName: true,
+            course: {
+                select: {
+                    crseName: true,
+                    crseFee: true,
+                    labFee: true
+                }
+            }
+        },
+        orderBy: {
+            deptName: 'asc'
+        }
+    });
 }
 
 
 const getStaffAndDependents = () => {
     return prisma.staff.findMany({
-		//TODO: Implement the query
-
+        where: {
+            staffDependent: {
+                some: {}
+            }
+        },
+        select: {
+            staffName: true,
+            staffDependent: {
+                select: {
+                    dependentName: true,
+                    relationship: true
+                }
+            }
+        },
+        orderBy: {
+            staffName: 'asc'
+        }
     });
 };
 
 const getDepartmentCourseStudentDob = () => {
     return prisma.department.findMany({
-		//TODO: Implement the query
-		
+        where: {
+            course: {
+                some: {
+                    student: {
+                        some: {}
+                    }
+                }
+            }
+        },
+        select: {
+            deptName: true,
+            course: {
+                where: {
+                    student: {
+                        some: {}
+                    }
+                },
+                select: {
+                    crseName: true,
+                    student: {
+                        select: {
+                            studName: true,
+                            dob: true
+                        },
+                        orderBy: {
+                            dob: 'desc'
+                        }
+                    }
+                },
+                orderBy: {
+                    crseName: 'asc'
+                }
+            }
+        },
+        orderBy: {
+            deptName: 'asc'
+        }
     });
 };
 
